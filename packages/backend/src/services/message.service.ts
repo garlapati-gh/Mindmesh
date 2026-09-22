@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma";
+import { getAIResponse, buildSystemPrompt } from "../lib/openai";
 import ApiError from "../utils/ApiError";
 
 export interface MessageItem {
@@ -29,6 +30,7 @@ export async function sendMessageToSession(
 ) {
 	const session = await prisma.session.findUnique({
 		where: { id, userId },
+		include: { user: true, moodCheckin: true },
 	});
 
 	if (!session) throw new ApiError(404, "SESSION_NOT_FOUND");
@@ -46,8 +48,29 @@ export async function sendMessageToSession(
 		});
 	}
 
-	// AI response placeholder — replace with real LLM call
-	const aiResponse = "AI_RESPONSE_PLACEHOLDER";
+	// Fetch conversation history for context
+	const conversationHistory = await prisma.message.findMany({
+		where: { sessionId: id },
+		orderBy: { createdAt: "desc" },
+		select: { role: true, content: true },
+		take: 20,
+	});
+
+	// Build system prompt with user context
+	const systemPrompt = buildSystemPrompt(
+		session.user.name,
+		session.moodCheckin?.score || 3,
+		session.moodCheckin?.note || undefined
+	);
+
+	// Convert history to chat format
+	const messages = conversationHistory.reverse().map((msg) => ({
+		role: msg.role === "USER" ? ("user" as const) : ("assistant" as const),
+		content: msg.content,
+	}));
+
+	// Get AI response from OpenAI
+	const aiResponse = await getAIResponse(messages, systemPrompt);
 
 	const assistantMessage = await prisma.message.create({
 		data: { sessionId: id, role: "AI", content: aiResponse },

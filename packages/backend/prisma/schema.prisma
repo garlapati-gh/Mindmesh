@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
   output   = "./generated"
@@ -29,28 +24,26 @@ enum MessageRole {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  supabaseId String   @unique
-  email     String   @unique
-  name      String
-  avatarUrl String?
-  persona   Persona  @default(CALM)
-  createdAt DateTime @default(now())
-
+  id           String        @id @default(uuid())
+  supabaseId   String        @unique
+  email        String        @unique
+  name         String
+  avatarUrl    String?
+  persona      Persona       @default(CALM)
+  createdAt    DateTime      @default(now())
   sessions     Session[]
   moodCheckins MoodCheckin[]
 }
 
 model Session {
-  id         String        @id @default(uuid())
-  userId     String
-  user       User          @relation(fields: [userId], references: [id])
-  title      String?
-  status     SessionStatus @default(ACTIVE)
-  summary    String?
-  startedAt  DateTime      @default(now())
-  endedAt    DateTime?
-
+  id          String        @id @default(uuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  title       String?
+  status      SessionStatus @default(ACTIVE)
+  summary     String?
+  startedAt   DateTime      @default(now())
+  endedAt     DateTime?
   messages    Message[]
   moodCheckin MoodCheckin?
 }

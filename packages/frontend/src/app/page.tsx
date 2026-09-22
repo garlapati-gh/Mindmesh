@@ -1,6 +1,5 @@
 "use client";
 
-import { syncAuth } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 import { Brain, Smile, MessageSquare, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";

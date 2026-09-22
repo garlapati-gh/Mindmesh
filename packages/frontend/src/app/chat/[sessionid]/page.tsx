@@ -14,7 +14,7 @@ import {
 } from "@/lib/api";
 
 export default function ChatPage() {
-	const { sessionId } = useParams<{ sessionId: string }>();
+	const { sessionid: sessionId } = useParams<{ sessionid: string }>();
 	const router = useRouter();
 
 	const [session, setSession] = useState<Session | null>(null);
@@ -36,7 +36,10 @@ export default function ChatPage() {
 
 	useEffect(() => {
 		getSession(sessionId)
-			.then(setSession)
+			.then((loadedSession) => {
+				setSession(loadedSession);
+				setMessages(loadedSession.messages ?? []);
+			})
 			.catch(() => router.push("/dashboard"));
 	}, [sessionId, router]);
 
@@ -69,8 +72,8 @@ export default function ChatPage() {
 		setTyping(true);
 
 		try {
-			const aiMsg = await sendMessage(sessionId, text);
-			setMessages((m) => [...m, aiMsg]);
+			const result = await sendMessage(sessionId, text);
+			setMessages((m) => [...m, result.assistantMessage]);
 		} catch {
 			setMessages((m) => [
 				...m,
@@ -90,8 +93,8 @@ export default function ChatPage() {
 	const handleEnd = async () => {
 		setEnding(true);
 		try {
-			await endSession(sessionId);
-			router.push("/dashboard");
+			const ended = await endSession(sessionId);
+			setSession((current) => current ? { ...current, ...ended } : ended);
 		} catch {
 			setEnding(false);
 		}
@@ -136,7 +139,7 @@ export default function ChatPage() {
 					</p>
 				</div>
 				<div className="flex items-center gap-2">
-					{session?.mood && (
+					{session?.moodCheckin && (
 						<span
 							className="text-[11px] px-2.5 py-1 rounded-full"
 							style={{
@@ -144,7 +147,7 @@ export default function ChatPage() {
 								color: "#8892A4",
 							}}
 						>
-							mood {session.mood}/5
+							mood {session.moodCheckin.score}/5
 						</span>
 					)}
 					<button

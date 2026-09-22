@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma";
+import { generateSessionSummary } from "../lib/openai";
 import ApiError from "../utils/ApiError";
 
 export interface CreateSessionInput {
@@ -99,6 +100,7 @@ export async function endSessionById(id: string, userId: string) {
 	const session = await prisma.session.findFirst({
 		where: { id, userId },
 		include: {
+			user: true,
 			messages: { orderBy: { createdAt: "asc" }, select: { role: true, content: true } },
 		},
 	});
@@ -106,12 +108,14 @@ export async function endSessionById(id: string, userId: string) {
 	if (!session) throw new ApiError(404, "SESSION_NOT_FOUND");
 	if (session.status === "ENDED") throw new ApiError(400, "SESSION_ALREADY_ENDED");
 
-	const transcript = session.messages
-		.map((m) => `${m.role === "USER" ? "User" : "Assistant"}: ${m.content}`)
-		.join("\n");
+	// Convert messages to chat format for summary generation
+	const messagesForSummary = session.messages.map((m) => ({
+		role: m.role === "USER" ? ("user" as const) : ("assistant" as const),
+		content: m.content,
+	}));
 
-	// Placeholder for summary — replace with real LLM call
-	const summary = `[Session summary placeholder — ${session.messages.length} messages]\n${transcript.slice(0, 200)}...`;
+	// Generate summary using OpenAI
+	const summary = await generateSessionSummary(messagesForSummary, session.user.name);
 
 	const updated = await prisma.session.update({
 		where: { id, userId },
