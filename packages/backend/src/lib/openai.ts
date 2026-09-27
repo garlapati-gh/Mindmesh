@@ -101,11 +101,7 @@ export async function generateSessionSummary(
 	messages: ChatMessage[],
 	userName: string
 ): Promise<string> {
-	const summaryPrompt = `The following is a completed therapy chat session between a user and MindMesh AI. 
-Generate a concise 3–5 sentence session summary that captures:
-1. The main emotional themes the user expressed
-2. Key coping strategies or insights discussed
-3. The user's emotional trajectory through the session
+	const summaryPrompt = `You are summarizing a completed emotional support session for the user. Write one concise third-person paragraph of 3–5 sentences. Use neutral, non-diagnostic language, do not use bullets, and do not invent details. Include the main emotional themes, coping strategies or insights discussed, and the user's emotional trajectory.
 
 User: ${userName}
 

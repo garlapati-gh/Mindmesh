@@ -44,12 +44,14 @@ app.get("/api/v1/health", async (req, res) => {
 		res.json({ 
 			status: "ok",
 			database: "connected",
+			llm: process.env.OPENAI_API_KEY ? "configured" : "unconfigured",
 			timestamp: new Date().toISOString()
 		});
 	} catch (error) {
 		res.status(503).json({ 
 			status: "error",
 			database: "disconnected",
+			llm: process.env.OPENAI_API_KEY ? "configured" : "unconfigured",
 			error: error instanceof Error ? error.message : "Unknown error"
 		});
 	}

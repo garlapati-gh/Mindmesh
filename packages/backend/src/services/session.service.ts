@@ -83,7 +83,10 @@ export async function getSessionById(id: string, userId: string) {
 		},
 	});
 
-	if (!session) throw new ApiError(404, "SESSION_NOT_FOUND");
+	if (!session) {
+		const exists = await prisma.session.findUnique({ where: { id } });
+		throw new ApiError(exists ? 403 : 404, exists ? "FORBIDDEN" : "SESSION_NOT_FOUND");
+	}
 
 	return {
 		id: session.id,
@@ -105,7 +108,10 @@ export async function endSessionById(id: string, userId: string) {
 		},
 	});
 
-	if (!session) throw new ApiError(404, "SESSION_NOT_FOUND");
+	if (!session) {
+		const exists = await prisma.session.findUnique({ where: { id } });
+		throw new ApiError(exists ? 403 : 404, exists ? "FORBIDDEN" : "SESSION_NOT_FOUND");
+	}
 	if (session.status === "ENDED") throw new ApiError(400, "SESSION_ALREADY_ENDED");
 
 	// Convert messages to chat format for summary generation

@@ -14,7 +14,10 @@ export async function getMessagesBySessionId(id: string, userId: string) {
 		where: { id, userId },
 	});
 
-	if (!session) throw new ApiError(404, "SESSION_NOT_FOUND");
+	if (!session) {
+		const exists = await prisma.session.findUnique({ where: { id } });
+		throw new ApiError(exists ? 403 : 404, exists ? "FORBIDDEN" : "SESSION_NOT_FOUND");
+	}
 
 	return prisma.message.findMany({
 		where: { sessionId: id },
@@ -33,7 +36,10 @@ export async function sendMessageToSession(
 		include: { user: true, moodCheckin: true },
 	});
 
-	if (!session) throw new ApiError(404, "SESSION_NOT_FOUND");
+	if (!session) {
+		const exists = await prisma.session.findUnique({ where: { id } });
+		throw new ApiError(exists ? 403 : 404, exists ? "FORBIDDEN" : "SESSION_NOT_FOUND");
+	}
 	if (session.status === "ENDED") throw new ApiError(400, "SESSION_ENDED");
 
 	const userMessage = await prisma.message.create({
@@ -73,7 +79,7 @@ export async function sendMessageToSession(
 	const aiResponse = await getAIResponse(messages, systemPrompt);
 
 	const assistantMessage = await prisma.message.create({
-		data: { sessionId: id, role: "AI", content: aiResponse },
+		data: { sessionId: id, role: "ASSISTANT", content: aiResponse },
 		select: { id: true, role: true, content: true, createdAt: true },
 	});
 

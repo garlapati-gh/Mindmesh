@@ -1,5 +1,5 @@
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
+const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api/v1";
 function getToken(): string | null {
 	if (typeof window === "undefined") return null;
 	return localStorage.getItem("mm_token");
@@ -8,6 +8,7 @@ function getToken(): string | null {
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 	const token = getToken();
 	const url = `${BASE}${path}`;
+	console.log(url);
 	const res = await fetch(url, {
 		...options,
 		headers: {
@@ -53,6 +54,11 @@ export async function getMe(): Promise<User> {
 	});
 }
 
+export async function logout(): Promise<void> {
+	await request("/auth/logout", { method: "POST" });
+	localStorage.removeItem("mm_token");
+}
+
 // Sessions
 
 export interface Session {
@@ -91,7 +97,7 @@ export async function getSessions(): Promise<Session[]> {
 }
 
 export async function getSession(id: string): Promise<Session> {
-	const data: { session: Omit<Session, "messages"> & { messages?: Array<Omit<Message, "role"> & { role: "USER" | "AI" }> } } = await request(`/sessions/${id}`, {
+	const data: { session: Omit<Session, "messages"> & { messages?: Array<Omit<Message, "role"> & { role: "USER" | "ASSISTANT" }> } } = await request(`/sessions/${id}`, {
 		method: "GET",
 		headers: {
 			Authorization: `Bearer ${getToken()}`,

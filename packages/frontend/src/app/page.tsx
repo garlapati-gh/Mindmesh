@@ -3,9 +3,16 @@
 import { supabase } from "@/lib/supabase";
 import { Brain, Smile, MessageSquare, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function LandingPage() {
 	const router = useRouter();
+
+	useEffect(() => {
+		supabase.auth.getSession().then(({ data }) => {
+			if (data.session) router.replace("/dashboard");
+		});
+	}, [router]);
 
 	const loginWithGoogle = async () => {
 		await supabase.auth.signInWithOAuth({
